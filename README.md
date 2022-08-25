@@ -6,7 +6,7 @@ Code for sms2slack device that forwards... SMS messages to Slack. Full build ins
 
 ## Flashing or Updating firmware
 
-1. Go to the https://web.sms2slack.com/
+1. Go to the https://configure.sms2slack.com/
 2. Attach your device and click on **Connect* and select "USB to UART Bridge" in the web browser prompt
 3. Click on **Install** or **Update** and follow instructions
 

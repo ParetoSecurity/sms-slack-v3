@@ -9,7 +9,7 @@ static const char *const TAG = "improv_serial";
 
 void ImprovSerial::setup(const String &firmware, const String &version, const String &variant, const String &name,
                          HardwareSerial *serial) {
-  preferences.begin("app", false);
+  preferences.begin(PREF_NAMESPACE);
   this->hw_serial_ = serial;
   this->firmware_name_ = firmware;
   this->firmware_version_ = version;
@@ -19,6 +19,11 @@ void ImprovSerial::setup(const String &firmware, const String &version, const St
     this->state_ = improv::STATE_PROVISIONED;
   else
     this->state_ = improv::STATE_AUTHORIZED;
+  String ssid = preferences.getString("ssid", WIFI_SSID);
+  String pass = preferences.getString("pass", WIFI_PASS);
+  String slack = preferences.getString("slack", SMS_SLACK);
+  ESP_LOGI(TAG, "Settings ssid=%s, password=%s, slack=%s", ssid.c_str(), pass.c_str(),
+           slack.c_str());
 }
 
 improv::State ImprovSerial::get_state() { return this->state_; }
@@ -59,9 +64,6 @@ bool ImprovSerial::loop(bool timeout) {
   if (this->state_ == improv::STATE_PROVISIONING) {
     if (WiFi.getMode() == WIFI_AP || (WiFi.getMode() == WIFI_STA && WiFi.isConnected())) {
       this->set_state_(improv::STATE_PROVISIONED);
-      preferences.putString("ssid", this->get_ssid());
-      preferences.putString("pass", this->get_password());
-      preferences.putString("slackURL", this->get_slack());
       std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
       this->send_response_(url);
       return true;
@@ -148,17 +150,23 @@ bool ImprovSerial::parse_improv_serial_byte_(uint8_t byte) {
 bool ImprovSerial::parse_improv_payload_(improv::ImprovCommand &command) {
   switch (command.command) {
     case improv::WIFI_SETTINGS: {
+      preferences.clear();
+      preferences.begin(PREF_NAMESPACE);
       WiFi.disconnect();
       WiFi.mode(WIFI_STA);
       WiFi.begin(command.ssid.c_str(), command.password.c_str());
+
+      preferences.putString("ssid", command.ssid.c_str());
+      preferences.putString("pass", command.password.c_str());
+      preferences.putString("slack", command.slack.c_str());
       this->set_state_(improv::STATE_PROVISIONING);
       this->command_.command = command.command;
       this->command_.ssid = command.ssid;
       this->command_.password = command.password;
       this->command_.slack = command.slack;
 
-      ESP_LOGD(TAG, "Received Improv wifi settings ssid=%s, password=%s", command.ssid.c_str(),
-               command.password.c_str());
+      ESP_LOGD(TAG, "Received Improv wifi settings ssid=%s, password=%s, slack=%s", command.ssid.c_str(),
+               command.password.c_str(), command.slack.c_str());
       return true;
     }
     case improv::GET_CURRENT_STATE:

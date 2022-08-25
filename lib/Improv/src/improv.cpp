@@ -39,9 +39,14 @@ ImprovCommand parse_improv_data(const uint8_t *data, size_t length, bool check_c
     size_t pass_start = ssid_end + 1;
     size_t pass_end = pass_start + pass_length;
 
+    uint8_t slack_length = data[pass_end];
+    size_t slack_start = pass_end + 1;
+    size_t slack_end = slack_start + slack_length;
+
     std::string ssid(data + ssid_start, data + ssid_end);
     std::string password(data + pass_start, data + pass_end);
-    return {.command = command, .ssid = ssid, .password = password};
+    std::string slack(data + slack_start, data + slack_end);
+    return {.command = command, .ssid = ssid, .password = password, .slack = slack};
   }
 
   improv_command.command = command;

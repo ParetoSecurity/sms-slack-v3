@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cstdarg>
 #include "helpers.h"
+#include "esp_wifi.h"
 
 std::string str_snake_case(const std::string &str) {
   std::string result;

@@ -1,6 +1,9 @@
 #include <GSMManager.h>
 
 namespace gsm {
+#ifdef DEBUG_SLACK
+bool sent = false;
+#endif
 SimcomAtCommandsEsp32 gsmAt(Serial2, SMS_TX, SMS_RX, -1);
 void OnLog(const char *logLine, bool flush) { ESP_LOGI(TAG, "%s", logLine); }
 // The getter for the instantiated singleton instance
@@ -19,11 +22,25 @@ void GSMManager_::setup() {
 }
 
 void GSMManager_::loop() {
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+#ifdef DEBUG_SLACK
+  if (!sent) {
+    sent = true;
+    struct SMSMessage pSMS {};
+    pSMS.message = "foo bar";
+    pSMS.number = "123123123";
+    if (xQueueSend(this->smsQueue, (void *) &pSMS, (TickType_t) 0) == pdTRUE) {
+      ESP_LOGI(TAG, "SMS: sent to queue");
+      return;
+    }
+  }
+#endif
   if (!gsmAt.EnsureModemConnected(115200)) {
     ESP_LOGI(TAG, "No modem found");
-    delay(500);
+    vTaskDelayUntil(&xLastWakeTime, pdTICKS_TO_MS(500));
     return;
   }
+  FixedString256 ops;
   int16_t signalQuality;
   GsmRegistrationState registrationStatus;
   FixedString32 imei;
@@ -40,13 +57,15 @@ void GSMManager_::loop() {
   } else {
     return;
   }
+  gsmAt.GetOperatorName(ops);
+  ESP_LOGI(TAG, "Operator: %s", ops.c_str());
 
   uint16_t smsIndex = -1;
   if (gsmAt.GetLastSmsIndexForRead(smsIndex) == AtResultType::Success) {
     // New SMS received
     if (smsIndex < 1) {
       ESP_LOGI(TAG, "SMS: 0");
-      delay(1000);
+      vTaskDelayUntil(&xLastWakeTime, pdTICKS_TO_MS(1500));
       return;
     }
 
@@ -60,6 +79,6 @@ void GSMManager_::loop() {
       }
     }
   }
-  delay(1000);
+  vTaskDelayUntil(&xLastWakeTime, pdTICKS_TO_MS(2000));
 }
 }  // namespace gsm

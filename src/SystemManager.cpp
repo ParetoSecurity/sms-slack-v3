@@ -27,9 +27,15 @@ const char *slackRootCACertificate = "-----BEGIN CERTIFICATE-----\n"
                                      "CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=\n"
                                      "-----END CERTIFICATE-----\n";
 
-static void gotIP(WiFiEvent_t event, WiFiEventInfo_t info) { isConnected = true; }
+static void gotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
+  isConnected = true;
+  ESP_LOGI(TAG, "IP: %s", WiFi.localIP().toString().c_str());
+}
 
-static void lostIP(WiFiEvent_t event, WiFiEventInfo_t info) { isConnected = false; }
+static void lostIP(WiFiEvent_t event, WiFiEventInfo_t info) {
+  isConnected = false;
+  ESP_LOGI(TAG, "WiFi: lost connection");
+}
 
 // The getter for the instantiated singleton instance
 SystemManager_ &SystemManager_::getInstance() {
@@ -62,30 +68,27 @@ void SystemManager_::processSMSQueue() {
     serializeJson(doc, output);
     ESP_LOGI(TAG, "JSON: %s", output.c_str());
 
-    if (!isConnected) {
-      ESP_LOGW(TAG, "WiFi is not connected.");
-      return;
-    }
-
-    String slackURL = preferences.getString("slackURL", "");
+    String slackURL = preferences.getString("slack", SMS_SLACK);
     if (slackURL.isEmpty()) {
-      ESP_LOGW(TAG, "Slack URL is not set.");
+      ESP_LOGI(TAG, "Slack URL is not set %s", slackURL.c_str());
       return;
+    } else {
+      ESP_LOGI(TAG, "Slack URL is %s", slackURL.c_str());
     }
     sendSlack(slackURL, output);
   }
 }
 
 void SystemManager_::setup() {
-  preferences.begin("app", false);
+  preferences.begin(PREF_NAMESPACE);
   auto name = std::string("SMS2Slack-" + get_mac_address().substr(6));
   WiFi.disconnect();
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(name.c_str());
 
   // reconnect
-  String ssid = preferences.getString("ssid", "");
-  String pass = preferences.getString("pass", "");
+  String ssid = preferences.getString("ssid", WIFI_SSID);
+  String pass = preferences.getString("pass", WIFI_PASS);
   if (!ssid.isEmpty()) {
     WiFi.begin(ssid.c_str(), pass.c_str());
   }
@@ -97,29 +100,28 @@ void SystemManager_::setup() {
   delay(1000);
 }
 
-void SystemManager_::loop() { processSMSQueue(); }
+void SystemManager_::loop() {
+  if (isConnected) {
+    processSMSQueue();
+  }
+}
 
 void SystemManager_::sendSlack(String url, std::string body) {
   this->client_.setReuse(true);
-  if (WiFi.status() != WL_CONNECTED) {
-    this->client_.end();
-    ESP_LOGW(TAG, "HTTP Request failed; Not connected to network");
-    return;
-  }
-  bool begin_status = this->client_.begin(*this->wifiClient, url.c_str());
+  bool begin_status = this->client_.begin(url.c_str());
   if (!begin_status) {
     this->client_.end();
-    ESP_LOGW(TAG, "HTTP Request failed at the begin phase. Please check the configuration");
+    ESP_LOGI(TAG, "HTTP Request failed at the begin phase. Please check the configuration");
     return;
   }
   int http_code = this->client_.POST(body.c_str());
   if (http_code < 0) {
-    ESP_LOGW(TAG, "HTTP Request failed; URL: %s; Error: %s", url.c_str(), HTTPClient::errorToString(http_code).c_str());
+    ESP_LOGI(TAG, "HTTP Request failed; URL: %s; Error: %s", url.c_str(), HTTPClient::errorToString(http_code).c_str());
     return;
   }
 
   if (http_code < 200 || http_code >= 300) {
-    ESP_LOGW(TAG, "HTTP Request failed; URL: %s; Code: %d", url.c_str(), http_code);
+    ESP_LOGI(TAG, "HTTP Request failed; URL: %s; Code: %d", url.c_str(), http_code);
     return;
   }
   ESP_LOGD(TAG, "HTTP Request completed; URL: %s; Code: %d", url.c_str(), http_code);

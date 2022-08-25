@@ -538,9 +538,9 @@ AtResultType SimcomAtCommands::EnableLTE(bool enable)
 	if (enable){
 		SendAt_P(AtCommand::Generic, F("AT+CNMP=38"));
 		PopCommandResult();
+		SendAt_P(AtCommand::Generic, F("AT+CMNB=1"));
+		PopCommandResult();
 	}
-	SendAt_P(AtCommand::Generic, F("AT+CMNB=1"));
-	PopCommandResult();
 	SendAt_P(AtCommand::Generic, F("AT+CFUN=1"));
 	return PopCommandResult();
 }

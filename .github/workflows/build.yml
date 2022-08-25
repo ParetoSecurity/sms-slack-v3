@@ -22,8 +22,16 @@ jobs:
         with:
           python-version: '3.9'
           
-      - name: Install PlatformIO Core
-        run: pip install --upgrade pipx && pipx install platformio
+      - name: Install pipx Core
+        run: pip install --upgrade pipx
+
+      - name: Install platformio Core
+        run: pipx install platformio --pip-args "install esptool" --force
 
       - name: Build PlatformIO Project
         run: pio run
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: firmware
+          path: firmware-factory.bin
