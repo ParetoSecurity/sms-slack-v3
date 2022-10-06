@@ -2,7 +2,7 @@
 
 [![PlatformIO CI](https://github.com/ParetoSecurity/sms-slack-v3/actions/workflows/build.yml/badge.svg)](https://github.com/ParetoSecurity/sms-slack-v3/actions/workflows/build.yml)
 
-Code for sms2slack device that forwards... SMS messages to Slack. Full build instructions on https://sms2slack.com/assemble. You can also buy a pre-soldered and pre-flashed device on https://sms2slack.com/buy. 
+Code for sms2slack device that forwards... SMS messages to Slack. Full build instructions on https://sms2slack.com/assemble. 
 
 ## Flashing or Updating firmware
 
