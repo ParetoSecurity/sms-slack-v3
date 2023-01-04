@@ -12,17 +12,6 @@ You can purchase the LILYGO® TTGO T-SIM A7670E/SA board for GSM A (Americas) or
 
 [3D print templates for the box](https://www.printables.com/model/219370-case-for-sms2slack-v2) that fits the AliExpress board.
 
-## Flashing or Updating firmware
-
-
-[<img width="600" alt="Screenshot 2023-01-02 at 15 29 20" src="https://user-images.githubusercontent.com/1309671/210244823-9f7ca286-ebd3-421a-bf46-89e7c19c164e.png">](https://www.youtube.com/watch?v=TGqXmkX-YNo)
-
-1. Install & update firmware
-2. Connect device to the Wi-Fi network
-3. Configure Slack URL from [Slack Webhook App](https://slack.com/apps/A0F7XDUAZ-incoming-webhooks?tab=more_info)
-4. Access logs and send terminal commands
-5. Attach your device and click on **Connect* and select "USB to UART Bridge" in the web browser prompt
-6. Click on **Install** or **Update** and follow instructions
 
 
 ### Schematics for SIM7000x + ESP32
