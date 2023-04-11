@@ -2,6 +2,8 @@
 
 sms2slack is a tiny box for a SIM card that receives SMS messages, like 2FA codes, and forwards them to your Slack channel.
 
+[Configure page »](https://paretosecurity.github.io/sms2slack-configure/)
+
 
 [![PlatformIO CI](https://github.com/ParetoSecurity/sms-slack-v3/actions/workflows/build.yml/badge.svg)](https://github.com/ParetoSecurity/sms-slack-v3/actions/workflows/build.yml)
 
